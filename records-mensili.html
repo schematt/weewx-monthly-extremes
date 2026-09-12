@@ -87,24 +87,25 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: 15px;
         }
         
         thead {
-            background: #f9f9f9;
+            background: #f5f5f5;
             border-bottom: 2px solid #ddd;
         }
         
         body.dark thead {
-            background: #333;
-            border-color: #555;
+            background: #2a2a2a;
+            border-color: #444;
         }
         
         th {
-            padding: 12px 16px;
+            padding: 16px;
             text-align: center;
             font-weight: 600;
             color: #333;
+            letter-spacing: 0.5px;
         }
         
         body.dark th {
@@ -116,9 +117,10 @@
         }
         
         td {
-            padding: 12px 16px;
+            padding: 20px 16px;
             text-align: center;
             border-bottom: 1px solid #eee;
+            vertical-align: middle;
         }
         
         body.dark td {
@@ -127,7 +129,16 @@
         
         td:first-child {
             text-align: left;
-            font-weight: 500;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        body.dark td:first-child {
+            color: #e0e0e0;
+        }
+        
+        tbody tr {
+            transition: background-color 0.15s ease;
         }
         
         tbody tr:hover {
@@ -138,23 +149,43 @@
             background: #333;
         }
         
+        .temp-value {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
         .temp-min {
             color: #0066cc;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 16px;
         }
         
         .temp-max {
             color: #cc3300;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 16px;
         }
         
         .year {
             font-size: 12px;
             color: #999;
+            font-weight: 400;
         }
         
         body.dark .year {
-            color: #777;
+            color: #888;
+        }
+        
+        .avg-value {
+            color: #333;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        body.dark .avg-value {
+            color: #e0e0e0;
         }
         
         .stats {
@@ -209,6 +240,9 @@
 </head>
 <body>
     <div class="container">
+        <div style="margin-bottom: 1.5rem;">
+            <a href="../" style="color: #0066cc; text-decoration: none; font-size: 14px;">← Torna alla homepage</a>
+        </div>
         <h1>Record Mensili</h1>
         <p class="subtitle">Temperature estreme registrate per ogni mese (2020-2026)</p>
         
@@ -223,12 +257,9 @@
                     <tr>
                         <th>Mese</th>
                         <th>T.min assoluta</th>
-                        <th>Anno</th>
                         <th>T.max assoluta</th>
-                        <th>Anno</th>
                         <th>Media T.min</th>
                         <th>Media T.max</th>
-                        <th>Anni</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -243,7 +274,6 @@
     <script>
         const EXTREMES_JSON = '/ecowitt_new/extremes-2020-2025.json';
         
-        // Rileva dark mode
         const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (darkMode) document.body.classList.add('dark');
         
@@ -260,7 +290,6 @@
         
         async function loadData() {
             try {
-                // Carica JSON con tutti i dati (2020-2026 aggiornato ogni domenica)
                 const data = await fetchJSON(EXTREMES_JSON);
                 if (!data) {
                     document.getElementById('error').textContent = 'Errore caricamento dati';
@@ -268,7 +297,6 @@
                     return;
                 }
                 
-                // Renderizza tabella direttamente dai dati JSON
                 const rows = data.map(month => ({
                     month: month.month,
                     minTemp: month.min_temp.toFixed(1),
@@ -276,26 +304,30 @@
                     maxTemp: month.max_temp.toFixed(1),
                     maxYear: month.max_year,
                     avgMin: month.avg_min.toFixed(1),
-                    avgMax: month.avg_max.toFixed(1),
-                    yearsCount: month.years_count
+                    avgMax: month.avg_max.toFixed(1)
                 }));
                 
-                // Renderizza tabella
                 const tbody = document.getElementById('tableBody');
                 tbody.innerHTML = rows.map(r => `
                     <tr>
                         <td>${r.month}</td>
-                        <td><span class="temp-min">${r.minTemp}°C</span><br><span class="year">${r.minYear}</span></td>
-                        <td>${r.minYear}</td>
-                        <td><span class="temp-max">${r.maxTemp}°C</span><br><span class="year">${r.maxYear}</span></td>
-                        <td>${r.maxYear}</td>
-                        <td>${r.avgMin}°C</td>
-                        <td>${r.avgMax}°C</td>
-                        <td>${r.yearsCount}</td>
+                        <td>
+                            <div class="temp-value">
+                                <span class="temp-min">${r.minTemp}°C</span>
+                                <span class="year">${r.minYear}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="temp-value">
+                                <span class="temp-max">${r.maxTemp}°C</span>
+                                <span class="year">${r.maxYear}</span>
+                            </div>
+                        </td>
+                        <td><span class="avg-value">${r.avgMin}°C</span></td>
+                        <td><span class="avg-value">${r.avgMax}°C</span></td>
                     </tr>
                 `).join('');
                 
-                // Statistiche sommarie
                 const minAssoluto = Math.min(...rows.map(r => parseFloat(r.minTemp)));
                 const maxAssoluto = Math.max(...rows.map(r => parseFloat(r.maxTemp)));
                 document.getElementById('stats').innerHTML = `
@@ -324,7 +356,6 @@
             }
         }
         
-        // Carica al load
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', loadData);
         } else {
