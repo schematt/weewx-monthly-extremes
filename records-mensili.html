@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Mensili | pnmeteo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        body.dark {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        
+        body.dark .subtitle {
+            color: #aaa;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        body.dark .loading {
+            color: #aaa;
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #c33;
+        }
+        
+        body.dark .error {
+            background: #311;
+            border-color: #533;
+            color: #faa;
+        }
+        
+        .table-wrapper {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        body.dark .table-wrapper {
+            background: #2a2a2a;
+            border-color: #444;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        thead {
+            background: #f9f9f9;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        body.dark thead {
+            background: #333;
+            border-color: #555;
+        }
+        
+        th {
+            padding: 12px 16px;
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        body.dark th {
+            color: #e0e0e0;
+        }
+        
+        th:first-child {
+            text-align: left;
+        }
+        
+        td {
+            padding: 12px 16px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        body.dark td {
+            border-color: #444;
+        }
+        
+        td:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+        
+        body.dark tbody tr:hover {
+            background: #333;
+        }
+        
+        .temp-min {
+            color: #0066cc;
+            font-weight: 600;
+        }
+        
+        .temp-max {
+            color: #cc3300;
+            font-weight: 600;
+        }
+        
+        .year {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        body.dark .year {
+            color: #777;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        body.dark .stat-card {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        body.dark .stat-label {
+            color: #aaa;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        
+        body.dark .footer {
+            border-color: #444;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Record Mensili</h1>
+        <p class="subtitle">Temperature estreme registrate per ogni mese (2020-2026)</p>
+        
+        <div id="stats" class="stats"></div>
+        
+        <div id="loading" class="loading">Caricamento dati...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="tableContainer" class="table-wrapper" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mese</th>
+                        <th>T.min assoluta</th>
+                        <th>Anno</th>
+                        <th>T.max assoluta</th>
+                        <th>Anno</th>
+                        <th>Media T.min</th>
+                        <th>Media T.max</th>
+                        <th>Anni</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>Dati da stazione meteorologica Ecowitt WS90 • Aggiornato automaticamente ogni domenica</p>
+        </div>
+    </div>
+
+    <script>
+        const EXTREMES_JSON = '/ecowitt_new/extremes-2020-2025.json';
+        
+        // Rileva dark mode
+        const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (darkMode) document.body.classList.add('dark');
+        
+        async function fetchJSON(url) {
+            try {
+                const resp = await fetch(url);
+                if (!resp.ok) return null;
+                return await resp.json();
+            } catch (e) {
+                console.warn(`Errore fetch ${url}:`, e);
+                return null;
+            }
+        }
+        
+        async function loadData() {
+            try {
+                // Carica JSON con tutti i dati (2020-2026 aggiornato ogni domenica)
+                const data = await fetchJSON(EXTREMES_JSON);
+                if (!data) {
+                    document.getElementById('error').textContent = 'Errore caricamento dati';
+                    document.getElementById('error').style.display = 'block';
+                    return;
+                }
+                
+                // Renderizza tabella direttamente dai dati JSON
+                const rows = data.map(month => ({
+                    month: month.month,
+                    minTemp: month.min_temp.toFixed(1),
+                    minYear: month.min_year,
+                    maxTemp: month.max_temp.toFixed(1),
+                    maxYear: month.max_year,
+                    avgMin: month.avg_min.toFixed(1),
+                    avgMax: month.avg_max.toFixed(1),
+                    yearsCount: month.years_count
+                }));
+                
+                // Renderizza tabella
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = rows.map(r => `
+                    <tr>
+                        <td>${r.month}</td>
+                        <td><span class="temp-min">${r.minTemp}°C</span><br><span class="year">${r.minYear}</span></td>
+                        <td>${r.minYear}</td>
+                        <td><span class="temp-max">${r.maxTemp}°C</span><br><span class="year">${r.maxYear}</span></td>
+                        <td>${r.maxYear}</td>
+                        <td>${r.avgMin}°C</td>
+                        <td>${r.avgMax}°C</td>
+                        <td>${r.yearsCount}</td>
+                    </tr>
+                `).join('');
+                
+                // Statistiche sommarie
+                const minAssoluto = Math.min(...rows.map(r => parseFloat(r.minTemp)));
+                const maxAssoluto = Math.max(...rows.map(r => parseFloat(r.maxTemp)));
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">T. minima assoluta</div>
+                        <div class="stat-value" style="color: #0066cc;">${minAssoluto.toFixed(1)}°C</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">T. massima assoluta</div>
+                        <div class="stat-value" style="color: #cc3300;">${maxAssoluto.toFixed(1)}°C</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Escursione termica</div>
+                        <div class="stat-value">${(maxAssoluto - minAssoluto).toFixed(1)}°C</div>
+                    </div>
+                `;
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+                
+            } catch (e) {
+                console.error('Errore:', e);
+                document.getElementById('error').textContent = 'Errore nel caricamento dei dati: ' + e.message;
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        // Carica al load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadData);
+        } else {
+            loadData();
+        }
+    </script>
+</body>
+</html>
