@@ -1,5 +1,10 @@
 # Monthly Extremes Report for WeeWX Belchertown
 
+## 🌍 Live Demo
+
+See it in action: **https://www.pnmeteo.it/ecowitt_new/pages/records-mensili.html**
+
+(Weather station in Pordenone, Italy - updates weekly)
 A custom report page for [New Belchertown WeeWX Skin](https://github.com/uajqq/weewx-belchertown-new) that displays **historical monthly temperature extremes** from your weather station's NOAA data.
 
 ## Features
