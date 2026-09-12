@@ -76,6 +76,8 @@
             border: 1px solid #ddd;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         body.dark .table-wrapper {
@@ -88,6 +90,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 15px;
+            min-width: 600px;
         }
         
         thead {
@@ -106,6 +109,7 @@
             font-weight: 600;
             color: #333;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
         
         body.dark th {
@@ -131,6 +135,7 @@
             text-align: left;
             font-weight: 600;
             color: #333;
+            white-space: nowrap;
         }
         
         body.dark td:first-child {
@@ -235,6 +240,56 @@
         body.dark .footer {
             border-color: #444;
             color: #777;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem 0.5rem;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .subtitle {
+                font-size: 13px;
+                margin-bottom: 1.5rem;
+            }
+            
+            th {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+            
+            td {
+                padding: 16px 8px;
+                font-size: 14px;
+            }
+            
+            .temp-min, .temp-max {
+                font-size: 15px;
+            }
+            
+            .year {
+                font-size: 11px;
+            }
+            
+            .avg-value {
+                font-size: 14px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+                margin: 1.5rem 0;
+            }
+            
+            .stat-card {
+                padding: 0.8rem;
+            }
+            
+            .stat-value {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
